@@ -64,6 +64,7 @@ dimg do
     shell.build_artifact do
       run ". /etc/profile.d/rvm.sh"
       run "export BUNDLE_GEMFILE=/app/Gemfile"
+      run "cd /app"
       run "bundle exec omnibus build -o append_timestamp:false dappdeps-base"
     end
 
