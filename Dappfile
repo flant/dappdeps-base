@@ -1,0 +1,74 @@
+dimg do
+  artifact do
+    docker.from "ubuntu:16.04"
+
+    git do
+      add "/" do
+        to "/app"
+      end
+    end
+
+    shell.before_install do
+      run "apt-get update"
+
+      run [
+        "apt-get install -y",
+        "gawk",
+        "wget",
+        "make",
+        "gnupg",
+        "git",
+        "curl",
+        "file",
+        "libgettextpo-dev",
+        "sudo",
+        "man",
+        "unzip",
+        "gcc",
+        "g++",
+        "screen",
+        "libncurses5-dev",
+        "debianutils",
+        "gettext",
+      ].join(" ")
+
+      run "wget https://ftp.gnu.org/gnu/glibc/glibc-2.26.tar.gz"
+      run "tar xf glibc-2.26.tar.gz"
+
+      run "curl -sSL https://get.rvm.io | bash"
+      run ". /etc/profile.d/rvm.sh"
+      run "rvm install 2.3"
+      run "gem install bundler"
+    end
+
+    shell.install do
+      run ". /etc/profile.d/rvm.sh"
+      run "export BUNDLE_GEMFILE=/app/Gemfile"
+      run "bundle install --without development"
+
+      run "cd /glibc-2.26"
+      run "mkdir build"
+      run "cd build"
+      run [
+        "../configure",
+        "--prefix=/.dapp/deps/base/0.2.0/embedded",
+        "--disable-werror",
+        "--enable-kernel=3.2",
+        "--enable-stack-protector=strong",
+        "libc_cv_slibdir=/.dapp/deps/base/0.2.0/embedded/lib",
+      ].join(" ")
+      run "make -j4"
+      run "make install"
+    end
+
+    shell.build_artifact do
+      run ". /etc/profile.d/rvm.sh"
+      run "export BUNDLE_GEMFILE=/app/Gemfile"
+      run "bundle exec omnibus build -o append_timestamp:false dappdeps-base"
+    end
+
+    export "/.dapp/deps/base/0.2.0" do
+      to "/.dapp/deps/base/0.2.0"
+    end
+  end
+end
