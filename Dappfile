@@ -32,9 +32,6 @@ dimg do
         "gettext",
       ].join(" ")
 
-      run "wget https://ftp.gnu.org/gnu/glibc/glibc-2.26.tar.gz"
-      run "tar xf glibc-2.26.tar.gz"
-
       run "curl -sSL https://get.rvm.io | bash"
       run ". /etc/profile.d/rvm.sh"
       run "rvm install 2.3"
@@ -45,20 +42,6 @@ dimg do
       run ". /etc/profile.d/rvm.sh"
       run "export BUNDLE_GEMFILE=/app/Gemfile"
       run "bundle install --without development"
-
-      run "cd /glibc-2.26"
-      run "mkdir build"
-      run "cd build"
-      run [
-        "../configure",
-        "--prefix=/.dapp/deps/base/0.2.0/embedded",
-        "--disable-werror",
-        "--enable-kernel=3.2",
-        "--enable-stack-protector=strong",
-        "libc_cv_slibdir=/.dapp/deps/base/0.2.0/embedded/lib",
-      ].join(" ")
-      run "make -j4"
-      run "make install"
     end
 
     shell.build_artifact do
