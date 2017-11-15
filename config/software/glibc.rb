@@ -13,8 +13,11 @@ relative_path "glibc-#{version}"
 build do
   env = with_standard_compiler_flags(with_embedded_path)
 
+  command "mkdir build"
+  command "cd build"
+
   command(
-    "./configure --prefix=#{install_dir}/embedded" +
+    "../configure --prefix=#{install_dir}/embedded" +
     " --disable-werror --enable-kernel=3.2 --enable-stack-protector=strong" +
     " libc_cv_slibdir=#{install_dir}/embedded/lib",
     env: env
