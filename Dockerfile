@@ -5,9 +5,8 @@ RUN rm /bin/sh && ln -s /bin/bash /bin/sh
 
 ENV LFS=/mnt/lfs
 ENV TOOLS=/.dapp/deps/base/0.2.0
-ENV LFS_TOOLS=$LFS/$TOOLS
 
-RUN mkdir -pv $TOOLS && mkdir -pv $LFS/sources && chmod -v a+wt $LFS/sources
+RUN mkdir -pv $LFS/$TOOLS && mkdir -pv $LFS/sources && chmod -v a+wt $LFS/sources
 ADD ./wget-list $LFS/sources/wget-list
 ADD ./md5sums $LFS/sources/md5sums
 RUN wget --input-file=$LFS/sources/wget-list --continue --directory-prefix=$LFS/sources
