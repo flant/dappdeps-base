@@ -1,7 +1,0 @@
-*.swp
-/build
-/.bundle
-/pkg
-/.vagrant
-/.vscode
-/.dapp_build
