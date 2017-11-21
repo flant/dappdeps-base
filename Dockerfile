@@ -6,7 +6,7 @@ RUN rm /bin/sh && ln -s /bin/bash /bin/sh
 ENV LFS=/mnt/lfs
 ENV TOOLS=/.dapp/deps/base/0.2.0
 
-RUN mkdir -pv $LFS/$TOOLS && mkdir -pv $LFS/sources && chmod -v a+wt $LFS/sources
+RUN mkdir -pv $LFS$TOOLS && mkdir -pv $LFS/sources && chmod -v a+wt $LFS/sources
 ADD ./wget-list $LFS/sources/wget-list
 ADD ./md5sums $LFS/sources/md5sums
 RUN wget --input-file=$LFS/sources/wget-list --continue --directory-prefix=$LFS/sources
@@ -21,7 +21,7 @@ RUN echo "set +h" >> /home/lfs/.bashrc && \
 echo "umask 022" >> /home/lfs/.bashrc && \
 echo "LC_ALL=POSIX" >> /home/lfs/.bashrc && \
 echo "LFS_TGT=$(uname -m)-lfs-linux-gnu" >> /home/lfs/.bashrc && \
-echo "PATH=/$TOOLS/bin:/bin:/usr/bin" >> /home/lfs/.bashrc && \
+echo "PATH=$TOOLS/bin:/bin:/usr/bin" >> /home/lfs/.bashrc && \
 echo "MAKEFLAGS='-j 5'" >> /home/lfs/.bashrc && \
 echo "export LFS LC_ALL LFS_TGT PATH MAKEFLAGS" >> /home/lfs/.bashrc
 
@@ -36,15 +36,15 @@ tar xf binutils-*.tar.bz2 -C binutils --strip-components 1 && \
 cd binutils && \
 mkdir -v build && \
 cd build && \
-../configure --prefix=/$TOOLS \
+../configure --prefix=$TOOLS \
 --with-sysroot=$LFS \
---with-lib-path=/$TOOLS/lib \
+--with-lib-path=$TOOLS/lib \
 --target=$LFS_TGT \
 --disable-nls \
 --disable-werror
 WORKDIR $LFS/sources/binutils/build
 RUN make
-RUN mkdir -pv /$TOOLS/lib && ln -sv lib /$TOOLS/lib64 && make install
+RUN mkdir -pv $TOOLS/lib && ln -sv lib $TOOLS/lib64 && make install
 
 ADD ./gcc-before-configure.sh $LFS/sources/gcc-before-configure.sh
 RUN cd $LFS/sources/ && \
@@ -62,13 +62,13 @@ mkdir -v build && \
 cd build && \
 ../configure \
 --target=$LFS_TGT \
---prefix=/$TOOLS \
+--prefix=$TOOLS \
 --with-glibc-version=2.11 \
 --with-sysroot=$LFS \
 --with-newlib \
 --without-headers \
---with-local-prefix=/$TOOLS \
---with-native-system-header-dir=/$TOOLS/include \
+--with-local-prefix=$TOOLS \
+--with-native-system-header-dir=$TOOLS/include \
 --disable-nls \
 --disable-shared \
 --disable-multilib \
@@ -92,7 +92,7 @@ tar xf linux*.tar.xz -C linux --strip-components 1 && \
 WORKDIR $LFS/sources/linux
 RUN make mrproper && \
 make INSTALL_HDR_PATH=dest headers_install && \
-cp -rv dest/include/* /$TOOLS/include
+cp -rv dest/include/* $TOOLS/include
 
 RUN cd $LFS/sources/ && \
 mkdir glibc && \
@@ -100,11 +100,11 @@ tar xf glibc*.tar.xz -C glibc --strip-components 1 && \
 mkdir -v build && \
 cd build && \
 ../configure \
---prefix=/$TOOLS \
+--prefix=$TOOLS \
 --host=$LFS_TGT \
 --build=$(../scripts/config.guess) \
 --enable-kernel=3.2 \
---with-headers=/$TOOLS/include \
+--with-headers=$TOOLS/include \
 libc_cv_forced_unwind=yes \
 libc_cv_c_cleanup=yes
 WORKDIR $LFS/sources/glibc/build
