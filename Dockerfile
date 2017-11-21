@@ -62,13 +62,13 @@ mkdir -v build && \
 cd build && \
 ../configure \
 --target=$LFS_TGT \
---prefix=/tools \
+--prefix=/$TOOLS \
 --with-glibc-version=2.11 \
 --with-sysroot=$LFS \
 --with-newlib \
 --without-headers \
---with-local-prefix=/tools \
---with-native-system-header-dir=/tools/include \
+--with-local-prefix=/$TOOLS \
+--with-native-system-header-dir=/$TOOLS/include \
 --disable-nls \
 --disable-shared \
 --disable-multilib \
