@@ -82,7 +82,6 @@ cd build && \
 --disable-libssp \
 --disable-libvtv \
 --disable-libstdcxx \
---with-libgcc \
 --enable-languages=c,c++
 WORKDIR $LFS/sources/gcc/build
 RUN make
