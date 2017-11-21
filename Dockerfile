@@ -1,3 +1,5 @@
+# Prepare dappdeps-base tools
+
 FROM ubuntu:16.04
 CMD ["/bin/bash"]
 
@@ -89,7 +91,7 @@ RUN make install
 
 RUN cd $LFS/sources/ && \
 mkdir linux && \
-tar xf linux*.tar.xz -C linux --strip-components 1 && \
+tar xf linux*.tar.xz -C linux --strip-components 1
 WORKDIR $LFS/sources/linux
 RUN make mrproper && \
 make INSTALL_HDR_PATH=dest headers_install && \
@@ -98,6 +100,7 @@ cp -rv dest/include/* $TOOLS/include
 RUN cd $LFS/sources/ && \
 mkdir glibc && \
 tar xf glibc*.tar.xz -C glibc --strip-components 1 && \
+cd glibc && \
 mkdir -v build && \
 cd build && \
 ../configure \
@@ -111,3 +114,8 @@ libc_cv_c_cleanup=yes
 WORKDIR $LFS/sources/glibc/build
 RUN make
 RUN make install
+
+# dappdeps/base
+
+FROM scratch
+COPY --from=0 /.dapp/deps/base/0.2.0 /.dapp/deps/base/0.2.0
