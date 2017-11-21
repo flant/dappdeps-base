@@ -4,7 +4,8 @@ RUN apt update && apt install -y build-essential wget curl gawk flex bison bzip2
 RUN rm /bin/sh && ln -s /bin/bash /bin/sh
 
 ENV LFS=/mnt/lfs
-ENV TOOLS=$LFS/.dapp/deps/base/0.2.0
+ENV TOOLS=/.dapp/deps/base/0.2.0
+ENV LFS_TOOLS=$LFS/$TOOLS
 
 RUN mkdir -pv $TOOLS && mkdir -pv $LFS/sources && chmod -v a+wt $LFS/sources
 ADD ./wget-list $LFS/sources/wget-list
@@ -81,7 +82,33 @@ cd build && \
 --disable-libssp \
 --disable-libvtv \
 --disable-libstdcxx \
+--with-libgcc \
 --enable-languages=c,c++
 WORKDIR $LFS/sources/gcc/build
+RUN make
+RUN make install
+
+RUN cd $LFS/sources/ && \
+mkdir linux && \
+tar xf linux*.tar.xz -C linux --strip-components 1 && \
+WORKDIR $LFS/sources/linux
+RUN make mrproper && \
+make INSTALL_HDR_PATH=dest headers_install && \
+cp -rv dest/include/* /$TOOLS/include
+
+RUN cd $LFS/sources/ && \
+mkdir glibc && \
+tar xf glibc*.tar.xz -C glibc --strip-components 1 && \
+mkdir -v build && \
+cd build && \
+../configure \
+--prefix=/$TOOLS \
+--host=$LFS_TGT \
+--build=$(../scripts/config.guess) \
+--enable-kernel=3.2 \
+--with-headers=/$TOOLS/include \
+libc_cv_forced_unwind=yes \
+libc_cv_c_cleanup=yes
+WORKDIR $LFS/sources/glibc/build
 RUN make
 RUN make install
