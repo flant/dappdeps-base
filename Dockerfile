@@ -1,10 +1,12 @@
-# Prepare dappdeps-base tools
+# Build tools
 
 FROM ubuntu:16.04
-CMD ["/bin/bash"]
+
+RUN rm /bin/sh && ln -s /bin/bash /bin/sh
+RUN >/etc/profile && >/root/.profile
+SHELL ["/bin/bash", "-lc"]
 
 RUN apt update && apt install -y build-essential wget curl gawk flex bison bzip2 liblzma5 texinfo file
-RUN rm /bin/sh && ln -s /bin/bash /bin/sh
 
 ENV LFS=/mnt/lfs
 ENV TOOLS=/.dapp/deps/base/0.2.0
@@ -15,23 +17,20 @@ ADD ./wget-list $LFS/sources/wget-list
 ADD ./md5sums $LFS/sources/md5sums
 RUN wget --input-file=$LFS/sources/wget-list --continue --directory-prefix=$LFS/sources
 RUN bash -c "pushd $LFS/sources && md5sum -c $LFS/sources/md5sums && popd"
-
-RUN ln -sv $LFS/.dapp /
-RUN groupadd lfs && useradd -s /bin/bash -g lfs -m -k /dev/null lfs
-RUN echo "exec env -i HOME=\$HOME TERM=\$TERM PS1='\u:\w\$ ' /bin/bash" >> /home/lfs/.bash_profile
-RUN chown -R lfs:lfs $LFS
-
-RUN echo "set +h" >> /home/lfs/.bashrc && \
-echo "umask 022" >> /home/lfs/.bashrc && \
-echo "LC_ALL=POSIX" >> /home/lfs/.bashrc && \
-echo "PATH=$TOOLS/bin:/bin:/usr/bin" >> /home/lfs/.bashrc && \
-echo "MAKEFLAGS='-j 5'" >> /home/lfs/.bashrc && \
-echo "export LC_ALL PATH MAKEFLAGS" >> /home/lfs/.bashrc
-
 ADD version-check.sh $LFS/sources/version-check.sh
 RUN $LFS/sources/version-check.sh
 
+RUN ln -sv $LFS/.dapp /
+RUN groupadd lfs && useradd -s /bin/bash -g lfs -m -k /dev/null lfs
+RUN chown -R lfs:lfs $LFS
+RUN >/home/lfs/.profile && \
+echo "set +h" >> /home/lfs/.profile && \
+echo "umask 022" >> /home/lfs/.profile
+
 USER lfs
+ENV LC_ALL=POSIX
+ENV PATH=$TOOLS/bin:/bin:/usr/bin
+ENV MAKEFLAGS='-j 5'
 
 RUN cd $LFS/sources/ && \
 mkdir binutils && \
@@ -115,7 +114,33 @@ WORKDIR $LFS/sources/glibc/build
 RUN make
 RUN make install
 
-# dappdeps/base
+RUN cd $LFS/sources/ && \
+rm -rf gcc && \
+mkdir gcc && \
+tar xf gcc-*.tar.xz -C gcc --strip-components 1 && \
+mkdir gcc/mpfr && \
+tar xf mpfr*.tar.xz -C gcc/mpfr --strip-components 1 && \
+mkdir gcc/gmp && \
+tar xf gmp*.tar.xz -C gcc/gmp --strip-components 1 && \
+mkdir gcc/mpc && \
+tar xf mpc*.tar.gz -C gcc/mpc --strip-components 1 && \
+cd gcc && \
+$LFS/sources/gcc-before-configure.sh && \
+mkdir -v build && \
+cd build && \
+../libstdc++-v3/configure \
+--host=$LFS_TGT \
+--prefix=$TOOLS \
+--disable-multilib \
+--disable-nls \
+--disable-libstdcxx-threads \
+--disable-libstdcxx-pch \
+--with-gxx-include-dir=$TOOLS/$LFS_TGT/include/c++/7.2.0 && env
+WORKDIR $LFS/sources/gcc/build
+RUN make
+RUN make install
+
+# Import tools into dappdeps/base scratch
 
 FROM scratch
 COPY --from=0 /.dapp/deps/base/0.2.0 /.dapp/deps/base/0.2.0
